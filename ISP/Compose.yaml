@@ -61,8 +61,7 @@ services:
       - ./email/dovecot/10-master.conf:/etc/dovecot/conf.d/10-master.conf
       - ./email/dovecot/10-ssl.conf:/etc/dovecot/conf.d/10-ssl.conf
       - ./email/mail.sh:/usr/local/bin/mail.sh
-      - ./email/mailname:/etc/mailname
-
+      
   nextcloud:                              
     image: nextcloud:latest
     container_name: webmailISP
