@@ -1,61 +1,34 @@
 compatibility_level = 3.9
 
-# --------------------------------------------------
-# IDENTIFICAÇÃO DO SERVIDOR
-# --------------------------------------------------
-
 myhostname = mail.nexustech.com.br
 myorigin = nexustech.com.br
 
 smtpd_banner = $myhostname ESMTP $mail_name (NexusTech Mail Server)
 
-# --------------------------------------------------
-# REDE
-# --------------------------------------------------
-
 inet_interfaces = all
 inet_protocols = ipv4
 
-mynetworks_style = subnet
-
 mynetworks = 127.0.0.0/8, 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16
-
-# --------------------------------------------------
-# DOMÍNIOS LOCAIS
-# --------------------------------------------------
 
 mydestination = localhost, localhost.localdomain, nexustech.com.br, mail.nexustech.com.br
 
-# --------------------------------------------------
-# MAILDIR
-# --------------------------------------------------
-
 home_mailbox = Maildir/
-
 mailbox_size_limit = 0
 mailbox_command =
 
-# --------------------------------------------------
-# ALIASES
-# --------------------------------------------------
-
 alias_maps = hash:/etc/aliases
 alias_database = hash:/etc/aliases
-
-# --------------------------------------------------
-# CONFIGURAÇÕES GERAIS
-# --------------------------------------------------
 
 biff = no
 recipient_delimiter = +
 relayhost =
 
 # --------------------------------------------------
-# TLS / SSL
+# TLS / SSL - CORRIGIDO (usando certificados Dovecot)
 # --------------------------------------------------
 
-smtpd_tls_key_file = /etc/ssl/private/ssl-cert-snakeoil.key
-smtpd_tls_cert_file = /etc/ssl/certs/ssl-cert-snakeoil.pem
+smtpd_tls_key_file = /etc/dovecot/private/dovecot.key
+smtpd_tls_cert_file = /etc/dovecot/private/dovecot.pem
 
 smtpd_tls_security_level = may
 
@@ -74,14 +47,10 @@ smtpd_sasl_auth_enable = yes
 
 cyrus_sasl_config_path = /etc/postfix/sasl
 
-# --------------------------------------------------
-# RESTRIÇÕES SMTP
-# --------------------------------------------------
-
 smtpd_relay_restrictions =
     permit_mynetworks,
     permit_sasl_authenticated,
-    defer_unauth_destination
+    defer_un auth_destination
 
 smtpd_recipient_restrictions =
     permit_mynetworks,

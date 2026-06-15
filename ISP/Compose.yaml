@@ -1,25 +1,22 @@
 services:
 
   dns:
-    image: powerdns/pdns-auth-47:latest
+    build:
+      context: ./powerdns
+      dockerfile: Dockerfile
     container_name: DNSISP
     ports:
       - "53:53/tcp"
       - "53:53/udp"
-     # - "8081:8081"  # API do PowerDNS (opcional)
     networks:
       - Enterprise
+    ipv4_address: 192.168.0.10
     volumes:
       - ./powerdns/pdns.conf:/etc/powerdns/pdns.conf
       - ./powerdns/zones:/etc/powerdns/zones
     environment:
       - PDNS_daemon=yes
       - PDNS_guardian=yes
-      #- PDNS_api=yes
-      #- PDNS_api_key=seu_apikey_aqui
-     # - PDNS_webserver=yes
-     # - PDNS_webserver_address=0.0.0.0
-     # - PDNS_webserver_port=8081
     restart: unless-stopped
 
   proxy:
@@ -31,14 +28,18 @@ services:
       - ./proxy/default.conf:/etc/nginx/conf.d/default.conf
     networks:
       - Enterprise
+    depends_on:
+      - site
+      - nextcloud
 
   site:
-    image: nginx:latest
-    container_name: nomedositenaodefinidoISP
-    volumes:
-      - ./web/nomedositenaodefinido:/usr/share/nginx/html
+    build:
+      context: ./portal
+      dockerfile: Dockerfile
+    container_name: site-ISP
     networks:
       - Enterprise
+    ipv4_address: 192.168.0.30
 
   email:
     build:
@@ -50,21 +51,29 @@ services:
       - "587:587/tcp"
       - "110:110/tcp"
       - "143:143/tcp"
-      - "993:993"
-      - "995:995"
+      - "993:993/tcp"
+      - "995:995/tcp"
     networks:
       - Enterprise
+    ipv4_address: 192.168.0.40
     volumes:
       - ./email/postfix/main.cf:/etc/postfix/main.cf
+      - ./email/postfix/master.cf:/etc/postfix/master.cf
+      - ./email/postfix/sasl/conf:/etc/postfix/sasl/conf
       - ./email/dovecot/10-auth.conf:/etc/dovecot/conf.d/10-auth.conf
       - ./email/dovecot/10-mail.conf:/etc/dovecot/conf.d/10-mail.conf
       - ./email/dovecot/10-master.conf:/etc/dovecot/conf.d/10-master.conf
       - ./email/dovecot/10-ssl.conf:/etc/dovecot/conf.d/10-ssl.conf
       - ./email/mail.sh:/usr/local/bin/mail.sh
-      
-  nextcloud:                              
+      - ./email/home:/home
+      - ./email/mailname:/etc/mailname
+
+  nextcloud:
     image: nextcloud:latest
     container_name: webmailISP
+    networks:
+      - Enterprise
+    ipv4_address: 192.168.0.50
     environment:
       - MYSQL_HOST=nextcloud-db
       - MYSQL_DATABASE=nextcloud
@@ -72,18 +81,19 @@ services:
       - MYSQL_PASSWORD=nextcloud_pass
       - NEXTCLOUD_ADMIN_USER=admin
       - NEXTCLOUD_ADMIN_PASSWORD=admin_pass
-      - NEXTCLOUD_TRUSTED_DOMAINS=webmail.isp.local
+      - NEXTCLOUD_TRUSTED_DOMAINS=webmail.isp.local,nexustech.com.br,webmail.nexustech
     volumes:
       - ./webmail/data:/var/www/html/data
       - ./webmail/config:/var/www/html/config
-    networks:
-      - Enterprise
     depends_on:
-      - nextcloud-db
+      nextcloud-db:
+        condition: service_healthy
 
-  nextcloud-db:                            
+  nextcloud-db:
     image: mariadb:10.11
     container_name: nextcloud-db
+    networks:
+      - Enterprise
     environment:
       - MYSQL_ROOT_PASSWORD=root_pass
       - MYSQL_DATABASE=nextcloud
@@ -91,9 +101,15 @@ services:
       - MYSQL_PASSWORD=nextcloud_pass
     volumes:
       - ./webmail/db:/var/lib/mysql
-    networks:
-      - Enterprise
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "nextcloud", "-pnextcloud_pass"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 networks:
   Enterprise:
     driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.0.0/24
