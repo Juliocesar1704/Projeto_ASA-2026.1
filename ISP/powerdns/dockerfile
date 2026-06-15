@@ -1,20 +1,25 @@
-# IMAGEM BASE - DEBIAN
+# Imagem base
 FROM debian:stable-slim
-#Atualizar e instalar pacotes do PowerDns e SQLite
+
+# Instala PowerDNS e Nginx (proxy reverso)
 RUN apt-get update && \
-    apt-get install -y pdns-server pdns-backend-sqlite && \
-    rm -rf /var/lib/apt/list*
+    apt-get install -y pdns-server pdns-backend-bind nginx && \
+    rm -rf /var/lib/apt/lists/*
 
-# COPIAR CONFIG PERSONALIZADA
-
+# Copia configurações
 COPY pdns.conf /etc/powerdns/pdns.conf
+COPY zones/ /etc/powerdns/zones/
 
-#MOSTRAR PADRÃO DNS
+# Copia conteúdo web
+COPY web/ /var/www/html/
 
-EXPOSE 53/udp 
+# Copia zonas DNS
+COPY zones/ /etc/powerdns/zones/
+
+# Exposição de portas
 EXPOSE 53/tcp
+EXPOSE 53/udp
+EXPOSE 80/tcp
 
-
-#COMANDO INICIALIZAÇÃO
-CMD ["pdns_server","--daemon=no", "gardian=no", "--loglevel=9 "]
-
+# Inicializa ambos os serviços
+CMD ["pdns_server", "--daemon=no", "--guardian=no", "--loglevel=9"]
