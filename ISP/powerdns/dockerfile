@@ -1,0 +1,20 @@
+# IMAGEM BASE - DEBIAN
+FROM debian:stable-slim
+#Atualizar e instalar pacotes do PowerDns e SQLite
+RUN apt-get update && \
+    apt-get install -y pdns-server pdns-backend-sqlite && \
+    rm -rf /var/lib/apt/list*
+
+# COPIAR CONFIG PERSONALIZADA
+
+COPY pdns.conf /etc/powerdns/pdns.conf
+
+#MOSTRAR PADRÃO DNS
+
+EXPOSE 53/udp 
+EXPOSE 53/tcp
+
+
+#COMANDO INICIALIZAÇÃO
+CMD ["pdns_server","--daemon=no", "gardian=no", "--loglevel=9 "]
+
