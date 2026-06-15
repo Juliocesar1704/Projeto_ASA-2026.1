@@ -25,11 +25,11 @@ services:
       - 
       - 
       
-  site:
+  portal:
     image: nginx:latest
-    container_name: nomedositenaodefinidoISP
+    container_name: portal_isp
     volumes:
-      - ./web/nomedositenaodefinido:/usr/share/nginx/html
+      - ./portal
     networks:
       - Enterprise
 
