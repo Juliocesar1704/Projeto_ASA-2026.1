@@ -6,7 +6,7 @@ criar_usuario() {
     if ! id "$usuario" >/dev/null 2>&1; then
         useradd -m "$usuario"
         echo "$usuario:123456" | chpasswd
-        mkdir -p /home/$usuario/Maildir
+        mkdir -p /home/$usuario/Maildir/{cur,new,tmp}
         chown -R $usuario:$usuario /home/$usuario
     fi
 }
