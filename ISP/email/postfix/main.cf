@@ -1,0 +1,58 @@
+compatibility_level = 3.9
+
+myhostname = mail.nexustech.com.br
+myorigin = nexustech.com.br
+
+smtpd_banner = $myhostname ESMTP $mail_name (NexusTech Mail Server)
+
+inet_interfaces = all
+inet_protocols = ipv4
+
+mynetworks = 127.0.0.0/8, 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16
+
+mydestination = localhost, localhost.localdomain, nexustech.com.br, mail.nexustech.com.br
+
+home_mailbox = Maildir/
+mailbox_size_limit = 0
+mailbox_command =
+
+alias_maps = hash:/etc/aliases
+alias_database = hash:/etc/aliases
+
+biff = no
+recipient_delimiter = +
+relayhost =
+
+# --------------------------------------------------
+# TLS / SSL - CORRIGIDO (usando certificados Dovecot)
+# --------------------------------------------------
+
+smtpd_tls_key_file = /etc/dovecot/private/dovecot.key
+smtpd_tls_cert_file = /etc/dovecot/private/dovecot.pem
+
+smtpd_tls_security_level = may
+
+smtp_tls_CAfile = /etc/ssl/certs/ca-certificates.crt
+smtp_tls_security_level = may
+
+smtp_tls_session_cache_database = btree:${data_directory}/smtp_scache
+
+# --------------------------------------------------
+# SASL / DOVECOT AUTH
+# --------------------------------------------------
+
+smtpd_sasl_type = dovecot
+smtpd_sasl_path = private/auth
+smtpd_sasl_auth_enable = yes
+
+cyrus_sasl_config_path = /etc/postfix/sasl
+
+smtpd_relay_restrictions =
+    permit_mynetworks,
+    permit_sasl_authenticated,
+    defer_un auth_destination
+
+smtpd_recipient_restrictions =
+    permit_mynetworks,
+    permit_sasl_authenticated,
+    reject_unauth_destination

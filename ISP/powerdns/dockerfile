@@ -1,9 +1,9 @@
-# Imagem base
 FROM debian:stable-slim
 
-# Instala PowerDNS e Nginx (proxy reverso)
 RUN apt-get update && \
-    apt-get install -y pdns-server pdns-backend-bind nginx && \
+    apt-get install -y \
+    pdns-server \
+    pdns-backend-bind && \
     rm -rf /var/lib/apt/lists/*
 
 # Copia configurações
@@ -23,3 +23,4 @@ EXPOSE 80/tcp
 
 # Inicializa ambos os serviços
 CMD ["pdns_server", "--daemon=no", "--guardian=no", "--loglevel=9"]
+
