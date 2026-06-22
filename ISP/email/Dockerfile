@@ -15,9 +15,8 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 COPY mail.sh /usr/local/bin/mail.sh
-
 RUN chmod +x /usr/local/bin/mail.sh
 
 EXPOSE 25 587 110 143 993 995
 
-CMD ["/usr/local/bin/mail.sh"]
+CMD ["bash", "/usr/local/bin/mail.sh"]
