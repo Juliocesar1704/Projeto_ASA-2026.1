@@ -1,16 +1,22 @@
 compatibility_level = 3.9
 
 myhostname = mail.nexustech.com.br
-myorigin = nexustech.com.br
+mydomain = nexustech.com.br
+myorigin = $mydomain
 
-smtpd_banner = $myhostname ESMTP $mail_name (NexusTech Mail Server)
+smtpd_banner = $myhostname ESMTP NexusTech Mail Server
 
 inet_interfaces = all
 inet_protocols = ipv4
 
 mynetworks = 127.0.0.0/8, 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16
 
-mydestination = localhost, localhost.localdomain, nexustech.com.br, mail.nexustech.com.br
+mydestination =
+    localhost,
+    localhost.localdomain,
+    localhost.$mydomain,
+    $myhostname,
+    $mydomain
 
 home_mailbox = Maildir/
 mailbox_size_limit = 0
@@ -20,39 +26,58 @@ alias_maps = hash:/etc/aliases
 alias_database = hash:/etc/aliases
 
 biff = no
+append_dot_mydomain = no
+readme_directory = no
+
 recipient_delimiter = +
 relayhost =
 
-# --------------------------------------------------
-# TLS / SSL - CORRIGIDO (usando certificados Dovecot)
-# --------------------------------------------------
+#####################################
+# TLS
+#####################################
 
-smtpd_tls_key_file = /etc/dovecot/private/dovecot.key
 smtpd_tls_cert_file = /etc/dovecot/private/dovecot.pem
+smtpd_tls_key_file = /etc/dovecot/private/dovecot.key
 
 smtpd_tls_security_level = may
-
-smtp_tls_CAfile = /etc/ssl/certs/ca-certificates.crt
 smtp_tls_security_level = may
 
+smtp_tls_CAfile = /etc/ssl/certs/ca-certificates.crt
 smtp_tls_session_cache_database = btree:${data_directory}/smtp_scache
 
-# --------------------------------------------------
-# SASL / DOVECOT AUTH
-# --------------------------------------------------
+#####################################
+# SASL (Dovecot)
+#####################################
 
 smtpd_sasl_type = dovecot
 smtpd_sasl_path = private/auth
 smtpd_sasl_auth_enable = yes
 
-cyrus_sasl_config_path = /etc/postfix/sasl
+broken_sasl_auth_clients = yes
+
+#####################################
+# RESTRIÇÕES
+#####################################
 
 smtpd_relay_restrictions =
     permit_mynetworks,
     permit_sasl_authenticated,
-    defer_un auth_destination
+    reject_unauth_destination
 
 smtpd_recipient_restrictions =
     permit_mynetworks,
     permit_sasl_authenticated,
     reject_unauth_destination
+
+#####################################
+# ENTREGA
+#####################################
+
+local_transport = local
+virtual_transport = virtual
+
+#####################################
+# LOGS
+#####################################
+
+maillog_file = /var/log/postfix.log
