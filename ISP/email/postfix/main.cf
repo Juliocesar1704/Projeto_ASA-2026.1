@@ -4,8 +4,7 @@ myhostname = mail.nexustech.com.br
 mydomain = nexustech.com.br
 myorigin = $mydomain
 
-smtpd_banner = $myhostname ESMTP NexusTech Mail Server
-
+smtpd_banner = $myhostname ESMTP $mail_name (Nexustech Mail Server)
 inet_interfaces = all
 inet_protocols = ipv4
 
@@ -36,8 +35,11 @@ relayhost =
 # TLS
 #####################################
 
-smtpd_tls_cert_file = /etc/dovecot/private/dovecot.pem
-smtpd_tls_key_file = /etc/dovecot/private/dovecot.key
+smtpd_tls_key_file = /etc/ssl/private/ssl-cert-snakeoil.key
+smtpd_tls_cert_file = /etc/ssl/certs/ssl-cert-snakeoil.pem
+
+#smtpd_tls_cert_file = /etc/dovecot/private/dovecot.pem
+#smtpd_tls_key_file = /etc/dovecot/private/dovecot.key
 
 smtpd_tls_security_level = may
 smtp_tls_security_level = may
@@ -74,7 +76,6 @@ smtpd_recipient_restrictions =
 #####################################
 
 local_transport = local
-virtual_transport = virtual
 
 #####################################
 # LOGS

@@ -95,11 +95,7 @@ services:
       - ./webmail/data:/var/www/html/data
       - ./webmail/config:/var/www/html/config
       - ./webmail/custom_apps:/var/www/html/custom_apps
-
-      - NEXTCLOUD_TRUSTED_DOMAINS=webmail.isp.local,nexustech.com.br,webmail.nexustech
-    volumes:
-      - ./webmail/data:/var/www/html/data
-      - ./webmail/config:/var/www/html/config
+      
     depends_on:
       nextcloud-db:
         condition: service_healthy
@@ -123,10 +119,11 @@ services:
       - ./webmail/db:/var/lib/mysql
 
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "nextcloud", "-pnextcloud_pass"]
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -proot_pass || exit 1"]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
+      start_period: 30s
 
     networks:
       - isp_net

@@ -18,4 +18,20 @@ smtps     inet  n       -       y       -       -       smtpd
   -o smtpd_recipient_restrictions=permit_sasl_authenticated,reject
   -o milter_macro_daemon_name=ORIGINATING
 
-lmtp      unix  -       -       y       -       -       lmtp
+lmtp      unix  -       -       y       -       -       lmtprelay	  unix	-	-	n	-	-	smtp
+flush     unix  n       -       n       1000?   0       flush
+trace	  unix	-	-	n	-	0	bounce
+verify	  unix	-	-	n	-	1	verify
+relay	  unix	-	-	n	-	-	smtp
+proxymap  unix	-	-	n	-	-	proxymap
+anvil	  unix	-	-	n	-	1	anvil
+scache	  unix	-	-	n	-	1	scache
+discard	  unix	-	-	n	-	-	discard
+tlsmgr    unix  -       -       n       1000?   1       tlsmgr
+retry     unix  -       -       n       -       -       error
+proxywrite unix -       -       n       -       1       proxymap
+#smtp      inet  n       -       n       -       1       postscreen
+#smtpd     pass  -       -       n       -       -       smtpd
+#dnsblog   unix  -       -       n       -       0       dnsblog
+#tlsproxy  unix  -       -       n       -       0       tlsproxy
+postlog   unix-dgram n  -       n       -       1       postlogd
