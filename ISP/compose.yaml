@@ -1,5 +1,4 @@
 services:
-
   dns:
     image: internetsystemsconsortium/bind9:9.18
     container_name: DNSISP
@@ -11,6 +10,7 @@ services:
     networks:
       - isp_net
     restart: unless-stopped
+    
   proxy:
     image: nginx:latest
     container_name: proxyISP
@@ -25,7 +25,6 @@ services:
       - isp_net
     restart: unless-stopped
 
-
   site:
     build:
       context: ./portal
@@ -36,38 +35,28 @@ services:
     restart: unless-stopped
 
 
- # email:
-  #  build:
-   #   context: ./email
-    #  dockerfile: Dockerfile
-    #container_name: email-ISP
+  email:
+    build:
+      context: ./email
+      dockerfile: Dockerfile
+    container_name: email-ISP
 
-    #ports:
-     # - "25:25" # SMTP
-     # - "465:465" # SMTP SSL
-     # - "587:587" # SMTP Submission
-     # - "110:110" # POP3
-     # - "143:143" # IMAP
-     # - "993:993" # IMAP SSL
-     # - "995:995" # POP3 SSL
+    ports:
+      - "2525:25" # SMTP exposto como 2525
+      - "4465:465" # SMTP SSL
+      - "5587:587" # SMTP Submission
+      - "1110:110" # POP3 exposto como 1110
+      - "1143:143" # IMAP
+      - "9993:993" # IMAP SSL
+      - "9995:995" # POP3 SSL
 
-    #volumes:
-     # - ./email/postfix/main.cf:/etc/postfix/main.cf
-     # - ./email/postfix/master.cf:/etc/postfix/master.cf
-     # - ./email/postfix/sasl/conf:/etc/postfix/sasl/conf
+    volumes:
+      - ./email/home:/home
+      
 
-      #- ./email/dovecot/10-auth.conf:/etc/dovecot/conf.d/10-auth.conf
-      #- ./email/dovecot/10-mail.conf:/etc/dovecot/conf.d/10-mail.conf
-      #- ./email/dovecot/10-master.conf:/etc/dovecot/conf.d/10-master.conf
-      #- ./email/dovecot/10-ssl.conf:/etc/dovecot/conf.d/10-ssl.conf
-
-      #- ./email/mail.sh:/usr/local/bin/mail.sh
-      #- ./email/home:/home
-      #- ./email/mailname:/etc/mailname
-
-   # networks:
-    #  - isp_net
-   # restart: unless-stopped
+    networks:
+      - isp_net
+    restart: unless-stopped
 
 
   #nextcloud:
@@ -120,7 +109,6 @@ services:
     #  - isp_net
 
   #  restart: unless-stopped
-
 
 networks:
   isp_net:

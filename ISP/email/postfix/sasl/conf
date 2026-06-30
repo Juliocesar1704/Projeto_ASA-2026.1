@@ -1,2 +1,0 @@
-pwcheck_method = auxprop
-auxprop_plugin = sasldb

@@ -5,38 +5,55 @@ set -e
 echo "[MAIL-ISP] Iniciando configuração do servidor de e-mail..."
 
 # =========================
-# 1. Ajuste do Postfix
+# Corrigir permissões de configs montadas (se existirem)
 # =========================
+if [ -f /etc/postfix/main.cf ]; then
+  chmod 644 /etc/postfix/main.cf || true
+fi
+if [ -f /etc/postfix/master.cf ]; then
+  chmod 644 /etc/postfix/master.cf || true
+fi
 
-postconf -e "myhostname=nexustech.com.br"
-postconf -e "mydomain=nexustech.com.br"
-postconf -e "myorigin=\$mydomain"
-postconf -e "inet_interfaces=all"
-postconf -e "inet_protocols=all"
-postconf -e "home_mailbox=Maildir/"
-postconf -e "mydestination=\$myhostname, localhost.\$mydomain, localhost, \$mydomain"
+# =========================
+# Garantir diretórios do Postfix e permissões
+# =========================
+for dir in active bounce corrupt defer deferred flush incoming saved private maildrop public; do
+  mkdir -p /var/spool/postfix/$dir
+done
 
+# Ajustar donos e grupos corretos
+chown -R postfix:postfix /var/spool/postfix/{active,bounce,corrupt,defer,deferred,flush,incoming,saved,private}
+chown -R postfix:postdrop /var/spool/postfix/{maildrop,public}
+chmod -R 755 /var/spool/postfix
+
+# =========================
+# 1. Iniciar syslog-ng
+# =========================
+echo "[MAIL-ISP] Iniciando syslog-ng..."
+service syslog-ng start || true
+
+# =========================
+# 2. Ajuste do Postfix (mensagem)
+# =========================
 echo "[MAIL-ISP] Postfix configurado."
 
 # =========================
-# 2. Criar usuários de teste
+# 3. Criar usuários de teste
 # =========================
-
 criar_usuario() {
     usuario=$1
     senha=${2:-123456}
 
     if ! id "$usuario" >/dev/null 2>&1; then
         echo "[MAIL-ISP] Criando usuário: $usuario"
-
         useradd -m "$usuario"
         echo "$usuario:$senha" | chpasswd
-
-        mkdir -p /home/$usuario/Maildir/{cur,new,tmp}
-        chown -R $usuario:$usuario /home/$usuario
-
-        echo "[MAIL-ISP] Usuário $usuario criado com sucesso."
     fi
+
+    mkdir -p /home/$usuario/Maildir/{cur,new,tmp}
+    chown -R $usuario:$usuario /home/$usuario
+    chmod -R 700 /home/$usuario/Maildir
+    echo "[MAIL-ISP] Usuário $usuario pronto."
 }
 
 criar_usuario admin_nx
@@ -45,40 +62,64 @@ criar_usuario financeiro_nx
 criar_usuario contato_nx
 
 # =========================
-# 3. Garantir permissões Maildir padrão
+# 4. Garantir permissões Maildir padrão
 # =========================
 for user in admin_nx suporte_nx financeiro_nx contato_nx; do
     mkdir -p /home/$user/Maildir/{cur,new,tmp}
     chown -R $user:$user /home/$user
+    chmod -R 700 /home/$user/Maildir
 done
 
 # =========================
-# 4. Iniciar serviços corretamente
+# 5. Iniciar serviços na ordem correta
 # =========================
-
-echo "[MAIL-ISP] Iniciando Postfix..."
-service postfix start
-
-sleep 2
-
 echo "[MAIL-ISP] Iniciando Dovecot..."
-service dovecot start
+service dovecot start || true
 
-# fallback caso service falhe
-if ! pgrep dovecot >/dev/null; then
+if ! pgrep dovecot >/dev/null 2>&1; then
     echo "[MAIL-ISP] Dovecot não iniciou via service, tentando modo direto..."
-    dovecot
+    dovecot || true
 fi
 
-if ! pgrep postfix >/dev/null; then
-    echo "[MAIL-ISP] Postfix não iniciou corretamente!"
-    exit 1
+# Esperar pelo socket SASL do Dovecot (timeout 20s)
+timeout=20
+count=0
+while [ $count -lt $timeout ]; do
+  if [ -S /var/spool/postfix/private/auth ]; then
+    echo "[MAIL-ISP] Socket SASL encontrado."
+    break
+  fi
+  sleep 1
+  count=$((count+1))
+done
+
+if [ $count -ge $timeout ]; then
+  echo "[MAIL-ISP] Aviso: socket SASL não encontrado após ${timeout}s. Postfix será iniciado mesmo assim."
+fi
+
+echo "[MAIL-ISP] Iniciando Postfix..."
+service postfix start || true
+
+# Checagem mais tolerante
+sleep 5
+if pgrep -x master >/dev/null 2>&1; then
+    echo "[MAIL-ISP] Postfix confirmado em execução."
+else
+    echo "[MAIL-ISP] Aviso: Postfix não foi detectado, verifique logs para detalhes."
 fi
 
 echo "[MAIL-ISP] Serviços iniciados com sucesso."
 
 # =========================
-# 5. Manter container vivo
+# 6. Checagens de configuração
 # =========================
+echo "[MAIL-ISP] Verificando configuração do Dovecot..."
+doveconf -n || echo "[MAIL-ISP] Erro ao validar configuração do Dovecot."
 
-tail -f /var/log/mail.log /dev/null
+echo "[MAIL-ISP] Verificando configuração do Postfix..."
+postfix check || echo "[MAIL-ISP] Erro ao validar configuração do Postfix."
+
+# =========================
+# 7. Manter container vivo (logs)
+# =========================
+tail -F /var/log/mail.log /var/log/dovecot.log || tail -F /var/log/mail.log || sleep infinity
