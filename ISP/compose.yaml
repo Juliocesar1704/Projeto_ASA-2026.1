@@ -1,24 +1,16 @@
 services:
 
   dns:
-    build:
-      context: ./powerdns
-      dockerfile: Dockerfile
+    image: internetsystemsconsortium/bind9:9.18
     container_name: DNSISP
     ports:
       - "53:53/tcp" 
       - "53:53/udp"
     volumes:
-      - ./powerdns/pdns.conf:/etc/powerdns/pdns.conf
-      - ./powerdns/zones:/etc/powerdns/zones
-    environment:
-      - PDNS_daemon=yes
-      - PDNS_guardian=yes
+      - ./bind:/etc/bind
     networks:
       - isp_net
     restart: unless-stopped
-
-
   proxy:
     image: nginx:latest
     container_name: proxyISP

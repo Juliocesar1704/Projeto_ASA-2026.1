@@ -47,7 +47,6 @@ criar_usuario contato_nx
 # =========================
 # 3. Garantir permissões Maildir padrão
 # =========================
-
 for user in admin_nx suporte_nx financeiro_nx contato_nx; do
     mkdir -p /home/$user/Maildir/{cur,new,tmp}
     chown -R $user:$user /home/$user
