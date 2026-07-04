@@ -1,0 +1,14 @@
+passdb passwd-file {
+  driver = passwd-file
+  passwd_file_path = /etc/dovecot/users
+}
+
+userdb passwd-file {
+  driver = passwd-file
+  passwd_file_path = /etc/dovecot/users
+  fields {
+    uid = 5000
+    gid = 5000
+    home = /var/mail/vhosts/%{user | domain}/%{user | username}
+  }
+}

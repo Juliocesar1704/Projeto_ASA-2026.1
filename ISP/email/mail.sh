@@ -1,22 +1,22 @@
 #!/bin/bash
 
-criar_usuario() {
-    usuario=$1
+# Limpar arquivos de PID antigos para evitar travamento em reinicializacoes
+rm -f /var/run/rsyslogd.pid /var/run/supervisord.pid /var/run/dovecot/master.pid
 
-    if ! id "$usuario" >/dev/null 2>&1; then
-        useradd -m "$usuario"
-        echo "$usuario:123456" | chpasswd
-        mkdir -p /home/$usuario/Maildir/{cur,new,tmp}
-        chown -R $usuario:$usuario /home/$usuario
-    fi
-}
+# Criar estrutura de diretorios virtuais para cada usuario de email
+DOMAIN="nexustech.com.br"
+VMAIL_DIR="/var/mail/vhosts/${DOMAIN}"
 
-criar_usuario admin_nx
-criar_usuario suporte_nx
-criar_usuario financeiro_nx
-criar_usuario contato_nx
+echo "[mail.sh] Configurando caixas de correio virtuais para ${DOMAIN}..."
 
-service postfix start
-service dovecot start
+mkdir -p "${VMAIL_DIR}"
 
-tail -f /dev/null
+# Criar diretorios Maildir para cada usuario virtual
+for user in admin_nx suporte_nx financeiro_nx contato_nx; do
+    mkdir -p "${VMAIL_DIR}/${user}/Maildir/{cur,new,tmp}"
+    echo "[mail.sh] Caixa de correio criada: ${user}@${DOMAIN}"
+done
+
+chown -R vmail:vmail /var/mail/vhosts
+
+echo "[mail.sh] Configuracao concluida. Supervisor iniciara os servicos."

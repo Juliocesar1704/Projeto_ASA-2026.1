@@ -13,10 +13,7 @@ mynetworks = 127.0.0.0/8, 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16
 
 mydestination =
     localhost,
-    localhost.localdomain,
-    localhost.$mydomain,
-    $myhostname,
-    $mydomain
+    localhost.localdomain
 
 home_mailbox = Maildir/
 mailbox_size_limit = 0
@@ -36,7 +33,7 @@ relayhost =
 # TLS
 #####################################
 
-smtpd_tls_cert_file = /etc/dovecot/private/dovecot.pem
+smtpd_tls_cert_file = /etc/dovecot/dovecot.pem
 smtpd_tls_key_file = /etc/dovecot/private/dovecot.key
 
 smtpd_tls_security_level = may
@@ -70,14 +67,15 @@ smtpd_recipient_restrictions =
     reject_unauth_destination
 
 #####################################
-# ENTREGA
+# ENTREGA LOCAL
 #####################################
 
 local_transport = local
-virtual_transport = virtual
+virtual_mailbox_domains = nexustech.com.br
+virtual_transport = lmtp:unix:private/dovecot-lmtp
 
 #####################################
 # LOGS
 #####################################
 
-maillog_file = /var/log/postfix.log
+maillog_file = /dev/stdout
