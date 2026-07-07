@@ -6,8 +6,8 @@ services:
       dockerfile: Dockerfile
     container_name: DNSISP
     ports:
-      - "5354:53/tcp"
-      - "5354:53/udp"
+      - "53:53/tcp"
+      - "53:53/udp"
     volumes:
       - ./powerdns/pdns.conf:/etc/powerdns/pdns.conf
       - ./powerdns/zones:/etc/powerdns/zones
