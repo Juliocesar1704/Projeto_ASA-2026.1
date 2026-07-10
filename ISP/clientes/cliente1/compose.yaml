@@ -5,7 +5,7 @@ services:
     container_name: proxy-cliente1
     restart: unless-stopped
     volumes:
-      - ./proxy/default.conf:/etc/nginx/conf.d/default.conf
+      - ./clientes/cliente1/proxy/default.conf:/etc/nginx/conf.d/default.conf
     networks:
       - isp_net
       - cliente1_net
