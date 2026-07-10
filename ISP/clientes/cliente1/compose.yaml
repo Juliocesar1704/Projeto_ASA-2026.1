@@ -1,6 +1,6 @@
 services:
 
-  proxy:
+  proxy-c1:
     image: nginx:latest
     container_name: proxy-cliente1
     restart: unless-stopped
@@ -10,23 +10,23 @@ services:
       - isp_net
       - cliente1_net
 
-  portal:
+  portal-c1:
     build:
-      context: ./portal
+      context: ./clientes/cliente1/portal
     container_name: portal-cliente1
     restart: unless-stopped
     networks:
       - cliente1_net
 
-  hotsite:
+  hotsite-c1:
     build:
-      context: ./hotsite
+      context: ./clientes/cliente1/hotsite
     container_name: hotsite-cliente1
     restart: unless-stopped
     networks:
       - cliente1_net
 
-  sign-db:
+  sign-db-c1:
     image: postgres:15-alpine
     container_name: sign-db-cliente1
     restart: unless-stopped
@@ -35,7 +35,7 @@ services:
       POSTGRES_PASSWORD: dbuserpass123
       POSTGRES_DB: docsign_db
     volumes:
-      - ./sign/postgres_data:/var/lib/postgresql/data
+      - sign_db_data_c1:/var/lib/postgresql/data
 
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U dbuser -d docsign_db"]
@@ -46,20 +46,20 @@ services:
     networks:
       - cliente1_net
 
-  sign-api:
+  sign-api-c1:
     image: salesfilho/sign-api:latest
     container_name: sign-api-cliente1
     restart: unless-stopped
 
     environment:
-      DB_HOST: sign-db
+      DB_HOST: sign-db-cliente1
       DB_PORT: 5432
       DB_USER: dbuser
       DB_PASSWORD: dbuserpass123
       DB_NAME: docsign_db
 
     depends_on:
-      sign-db:
+      sign-db-c1:
         condition: service_healthy
 
     healthcheck:
@@ -71,20 +71,23 @@ services:
     networks:
       - cliente1_net
 
-  sign-app:
+  sign-app-c1:
     image: salesfilho/sign-app:latest
     container_name: sign-app-cliente1
     restart: unless-stopped
 
     environment:
-      API_BASE_URL: http://sign-api:8000/api
+      API_BASE_URL: http://sign-api-cliente1:8000/api
 
     depends_on:
-      sign-api:
+      sign-api-c1:
         condition: service_healthy
 
     networks:
       - cliente1_net
+
+volumes:
+  sign_db_data_c1:
 
 networks:
 

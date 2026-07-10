@@ -1,6 +1,6 @@
 services:
 
-  proxy:
+  proxy-c2:
     image: nginx:latest
     container_name: proxy-cliente2
     restart: unless-stopped
@@ -10,86 +10,56 @@ services:
       - isp_net
       - cliente2_net
 
-  portal:
+  portal-c2:
     build:
-      context: ./portal
+      context: ./clientes/cliente2/portal
     container_name: portal-cliente2
     restart: unless-stopped
     networks:
       - cliente2_net
 
-  hotsite:
-    build:
-      context: ./hotsite
-    container_name: hotsite-cliente2
-    restart: unless-stopped
-    networks:
-      - cliente2_net
-
-  sign-db:
-    image: postgres:15-alpine
-    container_name: sign-db-cliente2
+  cms-db-c2:
+    image: mariadb:10.11
+    container_name: cms-db-cliente2
     restart: unless-stopped
     environment:
-      POSTGRES_USER: dbuser
-      POSTGRES_PASSWORD: dbuserpass123
-      POSTGRES_DB: docsign_db
+      - MYSQL_ROOT_PASSWORD=root_pass_cliente2
+      - MYSQL_DATABASE=wordpress
+      - MYSQL_USER=wordpress
+      - MYSQL_PASSWORD=wordpress_pass_cliente2
     volumes:
-      - ./sign/postgres_data:/var/lib/postgresql/data
-
+      - cms_db_data_c2:/var/lib/mysql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U dbuser -d docsign_db"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
-    networks:
-      - cliente2_net
-
-  sign-api:
-    image: salesfilho/sign-api:latest
-    container_name: sign-api-cliente2
-    restart: unless-stopped
-
-    environment:
-      DB_HOST: sign-db-cliente2
-      DB_PORT: 5432
-      DB_USER: dbuser
-      DB_PASSWORD: dbuserpass123
-      DB_NAME: docsign_db
-
-    depends_on:
-      sign-db:
-        condition: service_healthy
-
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "wordpress", "-pwordpress_pass_cliente2"]
       interval: 10s
       timeout: 5s
       retries: 5
-
     networks:
       - cliente2_net
 
-  sign-app:
-    image: salesfilho/sign-app:latest
-    container_name: sign-app-cliente2
+  cms-app-c2:
+    image: wordpress:latest
+    container_name: cms-app-cliente2
     restart: unless-stopped
-
     environment:
-      API_BASE_URL: http://sign-api-cliente2:8000/api
-
+      - WORDPRESS_DB_HOST=cms-db-cliente2
+      - WORDPRESS_DB_USER=wordpress
+      - WORDPRESS_DB_PASSWORD=wordpress_pass_cliente2
+      - WORDPRESS_DB_NAME=wordpress
+    volumes:
+      - cms_app_data_c2:/var/www/html
     depends_on:
-      sign-api:
+      cms-db-c2:
         condition: service_healthy
-
     networks:
       - cliente2_net
+
+volumes:
+  cms_db_data_c2:
+  cms_app_data_c2:
 
 networks:
-
   isp_net:
     external: true
-
   cliente2_net:
     driver: bridge

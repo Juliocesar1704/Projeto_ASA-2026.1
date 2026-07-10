@@ -12,6 +12,7 @@ RUN apt-get update && \
     dovecot-lmtpd \
     libsasl2-modules \
     ca-certificates \
+    openssl \
     supervisor \
     rsyslog && \
     apt-get clean && \

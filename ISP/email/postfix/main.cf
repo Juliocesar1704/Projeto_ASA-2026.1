@@ -33,8 +33,8 @@ relayhost =
 # TLS
 #####################################
 
-smtpd_tls_cert_file = /etc/dovecot/dovecot.pem
-smtpd_tls_key_file = /etc/dovecot/private/dovecot.key
+smtpd_tls_cert_file = /etc/ssl/certs/mail.pem
+smtpd_tls_key_file = /etc/ssl/private/mail.key
 
 smtpd_tls_security_level = may
 smtp_tls_security_level = may
