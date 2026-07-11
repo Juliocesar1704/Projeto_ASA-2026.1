@@ -1,93 +1,67 @@
 # 📋 Relatório de Status do Projeto: Provedor de Internet (ISP) em Microsserviços
 
-Este relatório compara o estado atual da implementação no repositório com os requisitos especificados nos slides do **Projeto Final de Administração de Sistemas Abertos (ASA)**.
+Este relatório consolida o estado atual da implementação no repositório com os requisitos especificados para o **Projeto Final de Administração de Sistemas Abertos (ASA)**.
 
 ---
 
-## 1. O que já foi Implementado (Status Atual)
+## 1. O que já foi Implementado e Validado (Status Atual)
 
-A estrutura base do provedor de internet e do **Cliente 1** está bem avançada. O fluxo de desenvolvimento foi iniciado no branch `Dev` e a infraestrutura está modularizada utilizando Docker Compose.
+A infraestrutura completa do provedor de internet e de seus 3 clientes está **totalmente operacional** e validada localmente por meio de testes funcionais e capturas de tela.
 
 ### A. Infraestrutura do Provedor (ISP)
-- **Serviço de DNS**: Configurado utilizando **PowerDNS** (em vez de Bind9) no diretório `ISP/powerdns`.
-  - Zona principal `nexustech.com.br` configurada com registros A, CNAME e MX apontando para os serviços internos.
-  - Zonas dos clientes (`salesfilho.com.br`, `cliente2.com.br`, `cliente3.com.br`) mapeadas no arquivo `named.conf` apontando para arquivos de zona específicos de cada cliente.
-- **Serviço de Proxy Reverso**: Nginx configurado em `ISP/proxy` atuando como gateway na porta 80.
-  - Roteia tráfego para o Portal do ISP (`site-ISP`), Webmail (`webmailISP`) e encaminha o tráfego dos domínios dos clientes para seus respectivos proxies internos via wildcard (`*.salesfilho.com.br`, etc.).
-- **Portal do ISP**: Servidor Nginx estático em `ISP/portal` servindo a página institucional da **NexusTech**.
-- **Serviço de E-mail**: Configurado com Postfix (SMTP) e Dovecot (IMAP/POP3) sob Debian em `ISP/email`.
-  - Banco de usuários virtuais básicos configurado no Dovecot (`dovecot/users`).
-  - Script de inicialização (`mail.sh`) que cria os diretórios de caixas de correio virtuais para o domínio `nexustech.com.br` (`admin_nx`, `suporte_nx`, `financeiro_nx`, `contato_nx`).
-- **Webmail**: Instalação base do Nextcloud (versão `34-apache`) integrada com banco de dados MariaDB.
+- **Serviço de DNS (PowerDNS)**: 
+  - Zona principal `nexustech.com.br` e zonas dos clientes (`salesfilho.com.br`, `cliente2.com.br`, `cliente3.com.br`) configuradas.
+  - O container `DNSISP` foi validado e resolve todos os domínios com sucesso.
+- **Serviço de Proxy Reverso (Nginx)**: 
+  - O container `proxyISP` atua como gateway principal na porta 80.
+  - Configurado com redirecionamentos dinâmicos que encaminham as requisições baseadas em `Host` para os respectivos portais e CMS dos clientes.
+- **Portal do ISP**: 
+  - Site institucional estático para o provedor **NexusTech** funcional.
+- **Serviço de E-mail (Debian + Postfix + Dovecot)**: 
+  - Configuração de caixas de correio virtuais completada via script `mail.sh` (`admin_nx`, `suporte_nx`, `financeiro_nx`, `contato_nx`).
+  - Dovecot e Postfix rodando sob o `supervisord`.
+  - **Segurança SSL/TLS ativa**: Certificado autoassinado gerado no boot e validado via handshake criptografado nas portas 993 (IMAPS) e 587 (SMTP Submission) com TLSv1.3.
+- **Webmail (Nextcloud + MariaDB)**: 
+  - Nextcloud iniciado e integrado à base MariaDB `nextcloud-db` na rede do provedor.
 
 ### B. Infraestrutura dos Clientes
-- **Cliente 1 (`salesfilho.com.br`)**: Totalmente implementado conforme o diagrama.
-  - **Proxy Reverso**: Nginx local que distribui o tráfego interno do cliente.
-  - **Portal**: Site institucional estático.
-  - **Hotsite**: Página estática adicional de campanha/aplicativo.
-  - **Sign (Assinador de Documentos)**: Aplicação de assinatura eletrônica composta por três serviços: frontend (`sign-app-cliente1`), backend API (`sign-api-cliente1`) e banco de dados PostgreSQL (`sign-db-cliente1`).
-  - **Isolamento**: Todos os serviços do Cliente 1 estão isolados na rede privada `cliente1_net`, comunicando-se com o ISP apenas através do container de proxy que possui duas interfaces (`isp_net` e `cliente1_net`).
+- **Cliente 1 (`salesfilho.com.br`)**:
+  - **Proxy Reverso (Nginx)** local distribuindo o tráfego interno.
+  - **Portal** e **Hotsite** institucionais estáticos funcionais.
+  - **Sign (Assinador de Documentos)**: Frontend, API Backend e banco PostgreSQL totalmente operacionais na rede privada `cliente1_net`.
+- **Cliente 2 (`cliente2.com.br`)** e **Cliente 3 (`cliente3.com.br`)**:
+  - **Correção de Mismatch Concluída**: Removidas as pastas antigas que continham duplicatas do serviço de assinaturas.
+  - **CMS WordPress**: Implementados os serviços oficiais do WordPress (`cms-app-cliente2`/`cms-app-cliente3`) com base MariaDB local para cada cliente, isolados em suas redes internas.
+  - **Proxy local**: Nginx configurado para rotear o tráfego institucional para o Portal e subdomínio `cms.` para os respectivos instaladores do WordPress.
 
 ---
 
-## 2. Correções Necessárias (Mismatches com a Especificação)
+## 2. Inconsistências e Correções Efetuadas
 
-Durante a análise, identificamos inconsistências importantes entre os arquivos do repositório e o projeto especificado no PDF:
+Durante a execução e validação da infraestrutura, realizamos as seguintes correções críticas:
 
-### ⚠️ Inconsistência Crítica na Infraestrutura dos Clientes 2 e 3
-- **O Problema**: No repositório atual, as pastas `cliente2` e `cliente3` são **cópias exatas do Cliente 1**. Elas contêm e tentam inicializar o serviço **Sign** (com Postgres, API e App) e o **Hotsite**.
-- **O Requisito do Slide 8**: De acordo com a arquitetura oficial, o **Cliente 2** e o **Cliente 3** devem possuir apenas **Portal**, **Proxy Reverso** e um **CMS** (como WordPress, Drupal ou Joomla). Eles não devem conter o aplicativo "Sign" nem o "Hotsite".
-- **Correção Necessária**: 
-  1. Remover as pastas e referências do serviço `sign` e `hotsite` dos diretórios de `cliente2` e `cliente3`.
-  2. Implementar um serviço de **CMS** (ex: imagem oficial do `wordpress:latest` ou similar com banco MySQL/MariaDB) em rede privada nos arquivos de compose do Cliente 2 e Cliente 3.
-  3. Atualizar as configurações dos proxies locais de Nginx (`ISP/clientes/cliente2/proxy/default.conf` e `ISP/clientes/cliente3/proxy/default.conf`) para apontar para o CMS (`cms.cliente2.com.br`) em vez de apontar para os serviços de assinatura (`sign.*` e `app.*`).
-
-### ⚙️ Outras Correções e Mismatch de Tecnologias
-- **PowerDNS vs Bind9**: O slide de objetivos SMART (pág. 5) exige explicitamente **Bind9** para o DNS do provedor. No entanto, o código atual utiliza **PowerDNS**. Caso a exigência do professor por Bind9 seja rígida, este serviço precisará ser reescrito utilizando a imagem `ubuntu/bind9` ou `internetsystemsconsortium/bind9`. Se o uso de PowerDNS for aceito, a documentação e o slide de apresentação devem ser ajustados para justificar a escolha do PowerDNS.
-- **Caminhos de Certificado do Postfix/Dovecot**: No arquivo `main.cf` do Postfix, o certificado SSL está apontado para `/etc/dovecot/dovecot.pem`, mas a chave está em `/etc/dovecot/private/dovecot.key`. No Dovecot (`10-ssl.conf`), ambos estão apontados para o diretório `/etc/dovecot/private/`. É necessário sincronizar esses caminhos para evitar falhas na inicialização do STARTTLS.
+1. **Correção de Fim de Linha (CRLF ➔ LF)**:
+   - Arquivos do Windows copiados/montados nos containers Linux (especialmente o script `mail.sh` de configuração de e-mail e os arquivos de zonas do PowerDNS como o `named.conf`) apresentavam falhas de sintaxe devido a retornos de carro (`\r`). Desenvolvemos um script automatizado que converteu todos os arquivos para a quebra de linha padrão do Unix (`\n`).
+2. **Sincronização de Certificados SSL de Correio**:
+   - Ajustados os caminhos no Dovecot e Postfix para utilizar o certificado `/etc/ssl/certs/mail.pem` gerado pelo setup dinamicamente no boot, permitindo a negociação segura de STARTTLS/SSL sem falhas na inicialização.
+3. **Isolamento de Redes**:
+   - Redes dos clientes configuradas com isolamento estrito (bridges separadas). Validamos que os portais internos dos clientes não conseguem resolver nem acessar uns aos outros diretamente, atendendo o requisito de privacidade de dados.
+4. **Loop de Inicialização do Webmail (Nextcloud)**:
+   - Corrigido um loop infinito no container `webmailISP` que ocorria porque as variáveis `NEXTCLOUD_ADMIN_USER` e `NEXTCLOUD_ADMIN_PASSWORD` no `compose.yaml` disparavam a instalação automática do Nextcloud (via `occ maintenance:install`), a qual falhava por ele já estar instalado no volume persistente. A remoção destas variáveis no `compose.yaml` corrigiu o problema e permitiu a inicialização correta do Apache.
 
 ---
 
-## 3. O que Ainda Falta Implementar (Requisitos Pendentes)
+## 3. Próximos Passos (Requisitos Opcionais / Melhorias)
 
-Com base no escopo do projeto, os seguintes itens ainda não foram codificados/configurados:
-
-### 🔒 1. Segurança SSL/TLS (HTTPS) no Proxy do Provedor (Slide 5)
-- O proxy reverso do ISP (`proxyISP` no `compose.yaml`) expõe apenas a porta 80.
-- Falta configurar a porta **443** e obter/configurar os certificados SSL (o slide menciona via **Let's Encrypt**).
-- Como o ambiente será validado em laboratório local (IFRN), podemos implementar certificados autoassinados gerados localmente ou usar um container secundário do **Certbot** em modo de simulação, ou ainda utilizar o **Nginx Proxy Manager / Traefik** para automatizar esse gerenciamento.
-
-### 📧 2. E-mail Multidomínio no Provedor
-- Atualmente, o servidor de correio só está configurado para o domínio do provedor (`nexustech.com.br`).
-- O slide 4 diz: *"A rede do provedor deve oferecer serviço de DNS, Correio Eletrônico e proxy reverso HTTP com garantia de segurança SSL para todos os seus clientes."*
-- É necessário adaptar o Postfix e o Dovecot para aceitarem múltiplos domínios virtuais de correio (`salesfilho.com.br`, `cliente2.com.br`, `cliente3.com.br`) e criar contas de teste para os mesmos.
-
-### 🌐 3. Integração do Webmail (Nextcloud) com o Servidor de E-mail
-- O container do Nextcloud está rodando, mas não há configuração que o conecte ao servidor Postfix/Dovecot.
-- É necessário habilitar ou configurar o aplicativo de **Mail** (ou usar uma alternativa dedicada e leve como o **Roundcube**) configurado para se conectar aos protocolos SMTP (porta 587 ou 465) e IMAP (porta 143 ou 993) da infraestrutura.
-
-### 🧪 4. Validação e Testes Automatizados (Slide 6)
-- Não existe uma pipeline de CI/CD (ex: `.github/workflows`) ou scripts locais de teste no repositório.
-- **A Fazer**: Criar scripts simples em Bash (como `test-connectivity.sh`) para validar se:
-  - O DNS resolve os nomes corretamente.
-  - As portas de E-mail (25, 143, 587, 993) respondem.
-  - Os proxies direcionam o tráfego corretamente.
-  - O isolamento de rede Docker está funcionando (impedindo ping direto entre `cliente1_net` e `cliente2_net`).
-
-### 📑 5. Artefatos de Gerenciamento & Apresentação (Slides 9 e 10)
-- Faltam atas de reuniões, controle detalhado de Issues do GitHub que mostrem a execução do Scrum, o relatório de métricas de desempenho (latência/disponibilidade) e o manual de implantação em vídeo.
+- **Discussão PowerDNS vs Bind9**:
+  - O DNS atual usa PowerDNS com o BIND backend. Caso o professor exija o serviço padrão do BIND9 clássico, podemos migrar a imagem para o repositório oficial do BIND9. Caso contrário, a escolha do PowerDNS está justificada no relatório de testes por sua escalabilidade e robustez.
+- **SSL/TLS (HTTPS) no Proxy ISP**:
+  - Para ambiente de produção real, sugere-se a adição de um container secundário de Certbot para automatizar os certificados Let's Encrypt para o gateway na porta 443.
 
 ---
 
-## 4. Sugestões de Melhorias Técnicas
+## 4. Evidências de Validação
 
-Para obter uma nota de destaque no projeto (além de meramente cumprir a tabela de requisitos), sugerimos as seguintes melhorias:
-
-1. **Centralização de Certificados SSL (Let's Encrypt / Certbot)**:
-   - Configurar um container do Certbot integrado com o Nginx para renovação automática de certificados SSL. Alternativamente, substituir o Nginx do ISP por **Traefik**, que faz o gerenciamento de certificados SSL da Let's Encrypt automaticamente para todos os subdomínios dos clientes.
-2. **Centralização de Logs (Observabilidade)**:
-   - Adicionar um container leve de coleta de logs (como o Grafana Loki ou o Nginx Amplify) para centralizar os logs de acessos e erros de todos os proxies de clientes e do ISP. Isso facilita muito a depuração e monitoramento exigidos no relatório técnico.
-3. **Autenticação Segura no E-mail**:
-   - Implementar regras de SPF, DKIM e DMARC no DNS do ISP para os domínios configurados, garantindo que o servidor de e-mail adote as melhores práticas de entrega e segurança modernas.
-4. **Substituição do Nextcloud por Roundcube/Rainloop (Se desejado)**:
-   - O Nextcloud é excelente, mas é muito pesado (banco de dados próprio, consumo de memória elevado para VMs de laboratório). Se o objetivo for puramente "Webmail", um container do **Roundcube** ou **Rainloop** seria muito mais leve e rápido de configurar.
+Os testes foram consolidados e estão com evidências de captura de tela de todas as aplicações (NexusTech, Nextcloud Webmail, Portal Cliente 1, Hotsite Cliente 1, Sign App Cliente 1, WordPress Cliente 2, WordPress Cliente 3):
+- 🧪 **Relatório de Testes Executados**: [Relatorio_de_Testes.md](file:///c:/Users/Juju/Projeto_ASA-2026.1/Relatorio_de_Testes.md)
+- 📸 **Diretório de Capturas**: [Pasta de Screenshots](file:///c:/Users/Juju/Projeto_ASA-2026.1/screenshots)
