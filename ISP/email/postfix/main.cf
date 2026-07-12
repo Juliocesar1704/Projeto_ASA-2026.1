@@ -71,7 +71,7 @@ smtpd_recipient_restrictions =
 #####################################
 
 local_transport = local
-virtual_mailbox_domains = nexustech.com.br
+virtual_mailbox_domains = nexustech.com.br, salesfilho.com.br, cliente2.com.br, cliente3.com.br
 virtual_transport = lmtp:unix:private/dovecot-lmtp
 
 #####################################

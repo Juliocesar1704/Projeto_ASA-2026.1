@@ -60,25 +60,42 @@ Address:  10.25.2.190
 
 ---
 
-## 3. Testes de Roteamento HTTP (Proxy Reverso Nginx)
+## 3. Testes de Roteamento HTTP/HTTPS (Proxy Reverso Nginx com SSL/TLS)
 
-Verificamos o proxy reverso do ISP (`proxyISP` na porta 80) e as pontes com os proxies locais de cada cliente (`proxy-cliente1`, `proxy-cliente2`, `proxy-cliente3`). Os testes de requisição retornaram as seguintes respostas:
+Verificamos o proxy reverso do ISP (`proxyISP` na porta 80 e 443) com suporte a HTTPS (via certificados SSL autoassidados multodomínio) e redirecionamento automático de HTTP para HTTPS:
 
-1. **Domínio Principal do ISP (`nexustech.com.br`)**:
-   - Comando: `curl.exe -s -H "Host: nexustech.com.br" http://localhost`
+1. **Redirecionamento HTTP para HTTPS (Porta 80 -> 443)**:
+   - Comando: `curl.exe -s -I -H "Host: nexustech.com.br" http://localhost`
+   - Retorno: **`301 Moved Permanently`** (Location: `https://nexustech.com.br/`)
+   - **Status**: ✅ **Sucesso**.
+
+2. **Domínio Principal do ISP via HTTPS (`nexustech.com.br`)**:
+   - Comando: `curl.exe -s -k -I -H "Host: nexustech.com.br" https://localhost`
    - Retorno: **`200 OK`**
    - **Status**: ✅ **Sucesso**.
-2. **Webmail do ISP (`webmail.nexustech.com.br`)**:
-   - Comando: `curl.exe -s -o NUL -w "%{http_code}" -H "Host: webmail.nexustech.com.br" http://localhost`
+
+3. **Webmail do ISP via HTTPS (`webmail.nexustech.com.br`)**:
+   - Comando: `curl.exe -s -k -I -H "Host: webmail.nexustech.com.br" https://localhost`
    - Retorno: **`302 Found`** (Redirecionamento do Nextcloud para a tela de login)
    - **Status**: ✅ **Sucesso**.
-3. **Portal do Cliente 1 (`salesfilho.com.br`)**:
+
+4. **Portal do Cliente 1 via HTTPS (`salesfilho.com.br`)**:
+   - Comando: `curl.exe -s -k -I -H "Host: salesfilho.com.br" https://localhost`
    - Retorno: **`200 OK`**
    - **Status**: ✅ **Sucesso**.
-4. **WordPress CMS do Cliente 2 (`cms.cliente2.com.br`)**:
+
+5. **Plataforma Sign do Cliente 1 via HTTPS (`sign.salesfilho.com.br`)**:
+   - Comando: `curl.exe -s -k -I -H "Host: sign.salesfilho.com.br" https://localhost`
+   - Retorno: **`200 OK`**
+   - **Status**: ✅ **Sucesso**.
+
+6. **WordPress CMS do Cliente 2 via HTTPS (`cms.cliente2.com.br`)**:
+   - Comando: `curl.exe -s -k -I -H "Host: cms.cliente2.com.br" https://localhost`
    - Retorno: **`302 Found`** (Redirecionamento para a tela de instalação)
    - **Status**: ✅ **Sucesso**.
-5. **WordPress CMS do Cliente 3 (`cms.cliente3.com.br`)**:
+
+7. **WordPress CMS do Cliente 3 via HTTPS (`cms.cliente3.com.br`)**:
+   - Comando: `curl.exe -s -k -I -H "Host: cms.cliente3.com.br" https://localhost`
    - Retorno: **`302 Found`** (Redirecionamento para a tela de instalação)
    - **Status**: ✅ **Sucesso**.
 

@@ -13,17 +13,26 @@ if [ ! -f /etc/ssl/certs/mail.pem ]; then
 fi
 
 # Criar estrutura de diretorios virtuais para cada usuario de email
-DOMAIN="nexustech.com.br"
-VMAIL_DIR="/var/mail/vhosts/${DOMAIN}"
+DOMAINS=("nexustech.com.br" "salesfilho.com.br" "cliente2.com.br" "cliente3.com.br")
 
-echo "[mail.sh] Configurando caixas de correio virtuais para ${DOMAIN}..."
+for DOMAIN in "${DOMAINS[@]}"; do
+    VMAIL_DIR="/var/mail/vhosts/${DOMAIN}"
+    echo "[mail.sh] Configurando caixas de correio virtuais para ${DOMAIN}..."
+    mkdir -p "${VMAIL_DIR}"
 
-mkdir -p "${VMAIL_DIR}"
+    if [ "$DOMAIN" = "nexustech.com.br" ]; then
+        USERS=("admin_nx" "suporte_nx" "financeiro_nx" "contato_nx")
+    elif [ "$DOMAIN" = "salesfilho.com.br" ]; then
+        USERS=("contato" "suporte")
+    else
+        USERS=("contato")
+    fi
 
-# Criar diretorios Maildir para cada usuario virtual
-for user in admin_nx suporte_nx financeiro_nx contato_nx; do
-    mkdir -p "${VMAIL_DIR}/${user}/Maildir/{cur,new,tmp}"
-    echo "[mail.sh] Caixa de correio criada: ${user}@${DOMAIN}"
+    # Criar diretorios Maildir para cada usuario virtual
+    for user in "${USERS[@]}"; do
+        mkdir -p "${VMAIL_DIR}/${user}/Maildir/{cur,new,tmp}"
+        echo "[mail.sh] Caixa de correio criada: ${user}@${DOMAIN}"
+    done
 done
 
 chown -R vmail:vmail /var/mail/vhosts
