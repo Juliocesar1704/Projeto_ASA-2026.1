@@ -1,0 +1,5 @@
+# System-specific and temporary files
+*.log
+.DS_Store
+Thumbs.db
+**/certbot/

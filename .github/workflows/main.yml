@@ -1,0 +1,53 @@
+name: CI/CD - Validação de Infraestrutura
+
+on:
+  push:
+    branches: [ "main", "dev" ]
+  pull_request:
+    branches: [ "main", "dev" ]
+
+jobs:
+  validate:
+    name: Validação e Linting
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Validar sintaxe dos arquivos do Docker Compose
+        run: |
+          echo "==== Validando arquivos Docker Compose ===="
+          docker compose -f ISP/compose.yaml \
+                         -f ISP/clientes/cliente1/compose.yaml \
+                         -f ISP/clientes/cliente2/compose.yaml \
+                         -f ISP/clientes/cliente3/compose.yaml \
+                         config
+
+      - name: Instalar utilitários do BIND9 para validação de zonas
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y bind9utils
+
+      - name: Validar arquivos de zona DNS (named-checkzone)
+        run: |
+          echo "==== Validando Zonas DNS ===="
+          named-checkzone nexustech.com.br ISP/powerdns/zones/nexustech.conf
+          named-checkzone salesfilho.com.br ISP/clientes/cliente1/salesfilho.conf
+          named-checkzone cliente2.com.br ISP/clientes/cliente2/cliente2.conf
+          named-checkzone cliente3.com.br ISP/clientes/cliente3/cliente3.conf
+
+      - name: Validar sintaxe de arquivos de configuração do Nginx (Proxy)
+        run: |
+          echo "==== Validando arquivos de configuração do Nginx ===="
+          # Executa um container nginx temporário para validar o arquivo de configuração do proxy principal do ISP
+          docker run --rm -v ${{ github.workspace }}/ISP/proxy/default.conf:/etc/nginx/conf.d/default.conf:ro nginx:latest nginx -t -c /etc/nginx/nginx.conf
+          
+          # Valida o arquivo do Cliente 1
+          docker run --rm -v ${{ github.workspace }}/ISP/clientes/cliente1/proxy/default.conf:/etc/nginx/conf.d/default.conf:ro nginx:latest nginx -t -c /etc/nginx/nginx.conf
+          
+          # Valida o arquivo do Cliente 2
+          docker run --rm -v ${{ github.workspace }}/ISP/clientes/cliente2/proxy/default.conf:/etc/nginx/conf.d/default.conf:ro nginx:latest nginx -t -c /etc/nginx/nginx.conf
+          
+          # Valida o arquivo do Cliente 3
+          docker run --rm -v ${{ github.workspace }}/ISP/clientes/cliente3/proxy/default.conf:/etc/nginx/conf.d/default.conf:ro nginx:latest nginx -t -c /etc/nginx/nginx.conf

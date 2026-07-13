@@ -1,4 +1,4 @@
-// =======================================
+﻿// =======================================
 // HEADER COM SOMBRA AO ROLAR
 // =======================================
 
@@ -219,7 +219,7 @@ if(title){
 // MENSAGEM DE BOAS-VINDAS
 // =======================================
 
-console.log("Portal Sales Filho carregado com sucesso.");
+console.log("Portal Cliente 3 carregado com sucesso.");
 
 // =======================================
 // ANO AUTOMÁTICO NO FOOTER
@@ -231,6 +231,6 @@ if(footer){
 
     footer.innerHTML =
 
-    `© ${new Date().getFullYear()} Sales Filho. Todos os direitos reservados.`;
+    `© ${new Date().getFullYear()} Cliente 3. Todos os direitos reservados.`;
 
 }
