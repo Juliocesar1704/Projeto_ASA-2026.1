@@ -5,14 +5,14 @@ services:
     container_name: proxy-cliente3
     restart: unless-stopped
     volumes:
-      - ./clientes/cliente3/proxy/default.conf:/etc/nginx/conf.d/default.conf
+      - ./proxy/default.conf:/etc/nginx/conf.d/default.conf
     networks:
       - isp_net
       - cliente3_net
 
   portal-c3:
     build:
-      context: ./clientes/cliente3/portal
+      context: ./portal
     container_name: portal-cliente3
     restart: unless-stopped
     networks:

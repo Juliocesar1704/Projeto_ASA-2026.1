@@ -52,5 +52,6 @@ $CONFIG = array (
   'mysql.utf8mb4' => true,
   'dbuser' => 'nextcloud',
   'dbpassword' => 'nextcloud_pass',
+  'allow_local_remote_servers' => true,
   'installed' => true,
 );

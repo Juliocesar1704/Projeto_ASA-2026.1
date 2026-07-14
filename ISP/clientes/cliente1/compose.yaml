@@ -5,14 +5,14 @@ services:
     container_name: proxy-cliente1
     restart: unless-stopped
     volumes:
-      - ./clientes/cliente1/proxy/default.conf:/etc/nginx/conf.d/default.conf
+      - ./proxy/default.conf:/etc/nginx/conf.d/default.conf
     networks:
       - isp_net
       - cliente1_net
 
   portal-c1:
     build:
-      context: ./clientes/cliente1/portal
+      context: ./portal
     container_name: portal-cliente1
     restart: unless-stopped
     networks:
@@ -20,7 +20,7 @@ services:
 
   hotsite-c1:
     build:
-      context: ./clientes/cliente1/hotsite
+      context: ./hotsite
     container_name: hotsite-cliente1
     restart: unless-stopped
     networks:
@@ -77,7 +77,7 @@ services:
     restart: unless-stopped
 
     environment:
-      API_BASE_URL: http://sign-api-cliente1:8000/api
+      API_BASE_URL: https://sign.salesfilho.com.br/api
 
     depends_on:
       sign-api-c1:
