@@ -54,4 +54,33 @@ $CONFIG = array (
   'dbpassword' => 'nextcloud_pass',
   'allow_local_remote_servers' => true,
   'installed' => true,
+  'user_backends' => 
+  array (
+    0 => 
+    array (
+      'class' => '\\OCA\\UserExternal\\IMAP',
+      'arguments' => 
+      array (
+        0 => 'email-ISP',
+        1 => 143,
+        2 => NULL,
+        3 => 'nexustech.com.br',
+        4 => false,
+        5 => true,
+      ),
+    ),
+    1 => 
+    array (
+      'class' => '\\OCA\\UserExternal\\IMAP',
+      'arguments' => 
+      array (
+        0 => 'email-ISP',
+        1 => 143,
+        2 => NULL,
+        3 => NULL,
+        4 => false,
+        5 => true,
+      ),
+    ),
+  ),
 );

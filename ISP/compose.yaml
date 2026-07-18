@@ -86,7 +86,9 @@ services:
 
 
   nextcloud:
-    image: nextcloud:34-apache
+    build:
+      context: ./webmail
+      dockerfile: Dockerfile
     container_name: webmailISP
 
     environment:
