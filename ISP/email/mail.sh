@@ -31,6 +31,10 @@ for DOMAIN in "${DOMAINS[@]}"; do
     # Criar diretorios Maildir para cada usuario virtual
     for user in "${USERS[@]}"; do
         mkdir -p "${VMAIL_DIR}/${user}/Maildir/{cur,new,tmp}"
+        # Criar subpastas padrão IMAP (Sent, Drafts, Trash)
+        for folder in Sent Drafts Trash; do
+            mkdir -p "${VMAIL_DIR}/${user}/Maildir/.${folder}/{cur,new,tmp}"
+        done
         echo "[mail.sh] Caixa de correio criada: ${user}@${DOMAIN}"
     done
 done

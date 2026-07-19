@@ -27,6 +27,7 @@ RUN groupadd -g 5000 vmail && \
 # Copiar configuracao de autenticacao virtual
 COPY dovecot/users /etc/dovecot/users
 COPY dovecot/auth-passwdfile.conf.ext /etc/dovecot/conf.d/auth-passwdfile.conf.ext
+COPY dovecot/15-mailboxes.conf /etc/dovecot/conf.d/15-mailboxes.conf
 
 COPY mail.sh /usr/local/bin/mail.sh
 RUN chmod +x /usr/local/bin/mail.sh

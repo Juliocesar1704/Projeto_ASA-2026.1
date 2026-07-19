@@ -81,7 +81,8 @@ services:
       - email_data:/var/mail/vhosts
 
     networks:
-      - isp_net
+      isp_net:
+        ipv4_address: 172.18.0.5
     restart: unless-stopped
 
 
@@ -90,6 +91,9 @@ services:
       context: ./webmail
       dockerfile: Dockerfile
     container_name: webmailISP
+    extra_hosts:
+      - "mail.nexustech.com.br:172.18.0.5"
+      - "nexustech.com.br:172.18.0.5"
 
     environment:
       - MYSQL_HOST=nextcloud-db
